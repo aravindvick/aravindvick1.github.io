@@ -17,7 +17,17 @@
         vr-mode-ui="enabled: false"
 		embedded
         arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'>
-        <a-entity gltf-model="./assets/magnemite/scene.gltf" rotation="0 180 0" scale="0.15 0.15 0.15" gps-entity-place="longitude: 80.259070; latitude: 13.024090;" animation-mixer/>
+        <a-entity id="ar-model" gltf-model="./assets/magnemite/scene.gltf" rotation="0 180 0" scale="0.15 0.15 0.15" animation-mixer>
+            <script>
+                // Simulate geolocation for demonstration
+                const fakeLatitude = 40.7128; // Example latitude
+                const fakeLongitude = -74.0060; // Example longitude
+            
+                // Find the <a-entity> element by its ID
+                const entity = document.querySelector('#ar-model');
+                entity.setAttribute('gps-entity-place', `longitude: ${fakeLongitude}; latitude: ${fakeLatitude};`);
+            </script>
+        </a-entity>
         <a-camera gps-camera rotation-reader></a-camera>
 	</a-scene>
 </body>
