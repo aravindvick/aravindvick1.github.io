@@ -1,23 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
-    <meta charset='utf-8'>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>GeoAR.js demo</title>
-    <script src="https://aframe.io/releases/0.9.2/aframe.min.js"></script>
-    <script src="https://raw.githack.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.min.js"></script>
-    <script src="https://raw.githack.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
-    <script>
-        THREEx.ArToolkitContext.baseURL = 'https://raw.githack.com/jeromeetienne/ar.js/master/three.js/'
-    </script>
-</head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>Hello WebXR!</title>
 
-<body style='margin: 0; overflow: hidden;'>
-    <a-scene
-        vr-mode-ui="enabled: false"
-		embedded
-        arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'>
-        <a-entity gltf-model="./assets/magnemite/scene.gltf" rotation="0 180 0" scale="0.15 0.15 0.15" gps-entity-place="longitude: 80.259070; latitude: 13.024090;" animation-mixer/>
-        <a-camera gps-camera rotation-reader></a-camera>
-	</a-scene>
+  <!-- three.js -->
+  <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
+</head>
+<body>
+
+<!-- Starting an immersive WebXR session requires user interaction.
+    We start this one with a simple button. -->
+<button onclick="activateXR()">Start Hello WebXR</button>
+<script>
+async function activateXR() {
+  const canvas = document.createElement("canvas");
+  document.body.appendChild(canvas);
+  const gl = canvas.getContext("webgl", {xrCompatible: true});
+  const scene = new THREE.Scene();
+  const materials = [
+    new THREE.MeshBasicMaterial({color: 0xff0000}),
+    new THREE.MeshBasicMaterial({color: 0x0000ff}),
+    new THREE.MeshBasicMaterial({color: 0x00ff00}),
+    new THREE.MeshBasicMaterial({color: 0xff00ff}),
+    new THREE.MeshBasicMaterial({color: 0x00ffff}),
+    new THREE.MeshBasicMaterial({color: 0xffff00})
+  ];
+
+
+  const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.2, 0.2, 0.2), materials);
+  cube.position.set(1, 1, 1);
+  scene.add(cube);
+
+
+const renderer = new THREE.WebGLRenderer({
+  alpha: true,
+  preserveDrawingBuffer: true,
+  canvas: canvas,
+  context: gl
+});
+renderer.autoClear = false;
+
+const camera = new THREE.PerspectiveCamera();
+camera.matrixAutoUpdate = false;
+
+const session = await navigator.xr.requestSession("immersive-ar");
+session.updateRenderState({
+  baseLayer: new XRWebGLLayer(session, gl)
+});
+
+
+const referenceSpace = await session.requestReferenceSpace('local');
+
+const onXRFrame = (time, frame) => {
+ 
+  session.requestAnimationFrame(onXRFrame);
+
+  
+  gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer)
+
+  
+  const pose = frame.getViewerPose(referenceSpace);
+  if (pose) {
+   
+    const view = pose.views[0];
+
+    const viewport = session.renderState.baseLayer.getViewport(view);
+    renderer.setSize(viewport.width, viewport.height)
+
+    
+    camera.matrix.fromArray(view.transform.matrix)
+    camera.projectionMatrix.fromArray(view.projectionMatrix);
+    camera.updateMatrixWorld(true);
+
+    
+    renderer.render(scene, camera)
+  }
+}
+session.requestAnimationFrame(onXRFrame);
+
+}
+
+</script>
 </body>
+</html>
